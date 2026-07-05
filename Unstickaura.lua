@@ -1,5 +1,3 @@
---Plugin The Worst
-
 local Tabs = getgenv().UI.Tabs
 local Sect = getgenv().UI.Sect
 
@@ -7,26 +5,13 @@ local removeAntiKickAuraActive = false
 local removeAntiKickAuraConnection = nil
 local useWhitelistRemoveAntiKick = true
 
-Sect.AdvancedSection:AddDropdown({
-	Name = "Unstick Aura Radius",
-	Options = { "12", "14", "16", "18", "20"},
-	Multi = false,
-	Default = "20",
-	MaxSize = 5,
-	Search = false,
-	Flag = "AntiKickAuraRadius",
-	Callback = function(value)
-		removeAntiKickRadius = tonumber(value)
-	end
-})
-
-Sect.AdvancedSection:AddToggle({
+local toggle = Sect.AdvancedSection:AddToggle({
 	Name = "Unstick Aura",
 	Default = false,
 	Flag = "UnstickToggle",
 	Binded = true,
 	DefaultBind = "",
-	Settings = false,
+	Settings = true,
 	Callback = function(on)
 		removeAntiKickAuraActive = on
 		if not on then
@@ -94,3 +79,17 @@ Sect.AdvancedSection:AddToggle({
 		end)
 	end
 })
+
+toggle:AddDropdown({
+	Name = "Unstick Aura Radius",
+	Options = {"14", "16", "18", "20", "31"},
+	Multi = false,
+	Default = "20",
+	MaxSize = 5,
+	Search = false,
+	Flag = "AntiKickAuraRadius",
+	Callback = function(value)
+		removeAntiKickRadius = tonumber(value)
+	end
+})
+
