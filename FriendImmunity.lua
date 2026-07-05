@@ -1,8 +1,8 @@
 local Tabs = getgenv().UI.Tabs
 local Sect = getgenv().UI.Sect
 
-local Section = {} 
-Section.Main = Tabs.DefenseTab:AddSection({Name = "Friend Immunity", Side = "Left"})
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 local selectedPlayers = {}
 
@@ -15,18 +15,17 @@ local SPE = PlayerEvents:WaitForChild("StickyPartEvent")
 local SpawnRemote = RS.MenuToys:WaitForChild("SpawnToyRemoteFunction")
 local DestroyRemote = RS.MenuToys:WaitForChild("DestroyToy")
 
-local function GetPlayerList()
-    local players = {}
-    for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= game.Players.LocalPlayer then
-            table.insert(players, v.Name .. " (" .. v.DisplayName .. ")")
+local function UpdatePlayersList()
+    local PlayersList = {}
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            PlayersList[#PlayersList + 1] = Player.Name .. " (" .. Player.DisplayName .. ")"
         end
     end
-    return players
+    return PlayersList
 end
 
-
-local AntiKick = Section.Main:AddToggle({
+local AntiKick = Sect.AntikickSection:AddToggle({
     Name = "Anti Kick",
     Default = false,
     Flag = "FriendAntiKick",
@@ -37,8 +36,7 @@ local AntiKick = Section.Main:AddToggle({
         _G.ShurikenAntiKick = Value
 
         local function ClearKunai()
-            local plr = game.Players.LocalPlayer
-            local inv = workspace:FindFirstChild(plr.Name .. "SpawnedInToys")
+            local inv = workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
             if inv and DestroyRemote then
                 for _, v in pairs(inv:GetChildren()) do
                     if v.Name == "AntiKick" or v.Name == "NinjaShuriken" then
@@ -50,7 +48,7 @@ local AntiKick = Section.Main:AddToggle({
 
         if Value then
             task.spawn(function()
-                local plr = game.Players.LocalPlayer
+                local plr = LocalPlayer
                 local canSpawn = plr:WaitForChild("CanSpawnToy")
 
                 local activeKunais = {}
@@ -60,22 +58,24 @@ local AntiKick = Section.Main:AddToggle({
                 end
 
                 local function getTargetHRP(targetName)
-                    local target = game.Players:FindFirstChild(targetName)
+                    local target = Players:FindFirstChild(targetName)
                     return target and getHRP(target.Character)
                 end
-
+				
                 local function EnsureOwnership(kunai)
                     local soundPart = kunai:FindFirstChild("SoundPart")
                     if not soundPart then return false end
-                    local owner = soundPart:FindFirstChild("PartOwner")
-                    if not owner then return false end
                     
-                    if owner.Value == plr.Name then
-                        return true
-                    else
-                        pcall(function() SNO:FireServer(soundPart, soundPart.CFrame) end)
-                        return false
+                    local timeout = tick() + 4
+                    while tick() < timeout do
+                        local owner = soundPart:FindFirstChild("PartOwner")
+                        if owner and owner.Value == plr.Name then
+                            return true
+                        end
+                        SNO:FireServer(soundPart, soundPart.CFrame)
+                        task.wait(0.025)
                     end
+                    return false
                 end
 
                 local function StickKunai(kunai, targetName)
@@ -118,7 +118,7 @@ local AntiKick = Section.Main:AddToggle({
                     local myHRP = getHRP(plr.Character)
                     if myHRP then
                         pcall(function()
-                            SpawnRemote:InvokeServer("NinjaShuriken", myHRP.CFrame * CFrame.new(0, 2.5, -2.5), Vector3.new(0,0,0))
+                            SpawnRemote:InvokeServer("NinjaShuriken", myHRP.CFrame * CFrame.new(0, 1, -1), Vector3.new(0,0,0))
                         end)
                     end
                     
@@ -145,7 +145,7 @@ local AntiKick = Section.Main:AddToggle({
                         local targetName = GetPlayerNameFromDropdown(playerText)
                         if not targetName then continue end
                         
-                        local targetPlr = game.Players:FindFirstChild(targetName)
+                        local targetPlr = Players:FindFirstChild(targetName)
                         if not targetPlr or not targetPlr.Character then continue end
                         if not targetPlr.Character:FindFirstChild("Humanoid") or targetPlr.Character.Humanoid.Health <= 0 then continue end
 
@@ -191,9 +191,10 @@ local AntiKick = Section.Main:AddToggle({
     end
 })
 
-AntiKick:AddDropdown({
+local PlayerSelectDropdown
+PlayerSelectDropdown = AntiKick:AddDropdown({
     Name = "Select Players",
-    Options = GetPlayerList(),
+    Options = UpdatePlayersList(),
     Multi = true,
     Default = {},
     MaxSize = 12,
@@ -203,3 +204,12 @@ AntiKick:AddDropdown({
         selectedPlayers = Value
     end
 })
+
+game.Players.PlayerAdded:Connect(function()
+    task.wait(0.5)
+    PlayerSelectDropdown:Refresh(UpdatePlayersList(), true)
+end)
+
+game.Players.PlayerRemoving:Connect(function()
+    PlayerSelectDropdown:Refresh(UpdatePlayersList(), true)
+end)
