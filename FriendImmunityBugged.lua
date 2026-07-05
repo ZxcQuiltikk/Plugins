@@ -25,7 +25,7 @@ local function GetPlayerList()
     return players
 end
 
-Section.Mai:AddDropdown({
+Section.Main:AddDropdown({
     Name = "Select Players",
     Options = GetPlayerList(),
     Multi = true,
