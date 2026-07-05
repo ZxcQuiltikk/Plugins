@@ -2,7 +2,7 @@ local Tabs = getgenv().UI.Tabs
 local Sect = getgenv().UI.Sect
 
 local Section = {} 
-Section.Main = Tabs.DefenseTab:AddSection({Name = "Anti Kick", Side = "Left"})
+Section.Main = Tabs.DefenseTab:AddSection({Name = "Friend Immunity", Side = "Left"})
 
 local selectedPlayers = {}
 
@@ -25,7 +25,7 @@ local function GetPlayerList()
     return players
 end
 
-Section.Main:AddDropdown({
+antikick:AddDropdown({
     Name = "Select Players",
     Options = GetPlayerList(),
     Multi = true,
@@ -38,13 +38,13 @@ Section.Main:AddDropdown({
     end
 })
 
-Section.Main:AddToggle({
+local antikick = Section.Main:AddToggle({
     Name = "Anti Kick",
     Default = false,
     Flag = "FriendAntiKick",
     Binded = true,
     DefaultBind = "",
-    Settings = false,
+    Settings = true,
     Callback = function(Value)
         _G.ShurikenAntiKick = Value
 
