@@ -1,12 +1,17 @@
 local Orion = getgenv().UI.Orion
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
 local RS = ReplicatedStorage:WaitForChild("GrabEvents")
 local ExtendGrabLine = RS:WaitForChild("ExtendGrabLine")
-local LocalPlayer = game:GetService("Players").LocalPlayer
+local LocalPlayer = game.Players.LocalPlayer
 
 local chatHistory = {}
 local chatDropdown = nil
 local lastSelected = ""
+
+local webhookEnabled = false
+local webhookUrl = ""
 
 local function sendPacket(plainText)
     ExtendGrabLine:FireServer(plainText)
@@ -25,6 +30,24 @@ Sect.ChatSect:AddTextbox({
         if text and text:match("%S") then
             sendPacket(text .. " //chat")
         end
+    end
+})
+
+local Webhooke = Sect.ChatSect:AddToggle({
+    Name = "Send to Webhook",
+    Default = false,
+	Settings = true,
+    Callback = function(state)
+        webhookEnabled = state
+    end
+})
+
+Webhooke:AddTextbox({
+    Name = "Discord Webhook",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(text)
+        webhookUrl = text:match("^%s*(.-)%s*$")
     end
 })
 
@@ -74,38 +97,67 @@ local function refreshDropdown()
     end
 end
 
-local function handleMessage(message, sender)
-    if typeof(message) == "string" and message ~= "" then
-        local cleanMessage = message:gsub(" //chat$", "")
-        local senderName = "Unknown"
-        
-        if typeof(sender) == "Instance" and sender:IsA("Player") then
-            senderName = sender.DisplayName
-        end
-        
-        local logEntry = senderName .. ": " .. cleanMessage
-        
-        table.insert(chatHistory, logEntry)
-        if #chatHistory > 20 then
-            table.remove(chatHistory, 1)
-        end
-        
-        refreshDropdown()
-        
-        Orion:MakeNotification({
-            Name = "Chat",
-            Content = logEntry,
-            Image = "rbxassetid://3944703587",
-            Time = 5,
-            Sound = "rbxassetid://9120381235",
-            SoundVolume = 0.5
+local function SendToWebhook(senderName, message)
+    if not webhookEnabled then return end
+    if not webhookUrl or webhookUrl == "" then return end
+
+    local content = string.format("**%s**: %s", senderName, message)
+
+    local success, err = pcall(function()
+        local headers = { ["Content-Type"] = "application/json" }
+        local body = HttpService:JSONEncode({
+            ["content"] = content,
+            ["username"] = "Chat Logger"
         })
+
+        request({
+            Url = webhookUrl,
+            Method = "POST",
+            Headers = headers,
+            Body = body
+        })
+    end)
+
+    if not success then
+        warn("Webhook Error: " .. tostring(err))
     end
+end
+
+local function handleMessage(message, sender)
+    if typeof(message) ~= "string" or message == "" then return end
+
+    local cleanMessage = message:gsub(" //chat$", "")
+    local senderName = "Unknown"
+    
+    if typeof(sender) == "Instance" and sender:IsA("Player") then
+        senderName = sender.DisplayName
+    elseif typeof(sender) == "string" then
+        senderName = sender
+    end
+    
+    local logEntry = senderName .. ": " .. cleanMessage
+    
+    table.insert(chatHistory, logEntry)
+    if #chatHistory > 20 then
+        table.remove(chatHistory, 1)
+    end
+    
+    refreshDropdown()
+	
+    SendToWebhook(senderName, cleanMessage)
+
+    Orion:MakeNotification({
+        Name = "Chat",
+        Content = logEntry,
+        Image = "rbxassetid://3944703587",
+        Time = 5,
+        Sound = "rbxassetid://9120381235",
+        SoundVolume = 0.5
+    })
 end
 
 local function processEvent(...)
     local args = {...}
-    
     local sender = nil
     local message = nil
     
