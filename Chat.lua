@@ -57,7 +57,7 @@ chatDropdown = Sect.ChatSect:AddDropdown({
     Multi = false,
     Default = "",
     MaxSize = 5,
-    Search = true,
+    Search = false,
     Flag = "ChatLogs",
     Callback = function(selected)
         if selected and selected ~= "" and selected ~= lastSelected then
