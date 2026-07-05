@@ -81,7 +81,7 @@ Sect.AdvancedSection:AddToggle({
 											end)
 											if part:FindFirstChild("PartOwner")
 												and part.PartOwner.Value == LocalPlayer.Name then
-												part.CFrame = CFrame.new(0, 1000, 0)
+												part.CFrame = CFrame.new(0, 100000, 0)
 											end
 										end
 									end
