@@ -66,7 +66,11 @@ Sect.AdvancedSection:AddToggle({
 									"AntiKick",
 									"ToolPickaxe",
 									"FoodPlate",
-									"JapaneseLantern"
+									"JapaneseLantern",
+									"SpookyCandle1",
+									"NinjaKatana",
+									"ToolPencil",
+									"FoodDonut"				
 								}) do
 									local toy = spawned:FindFirstChild(toyName)
 									if toy then
