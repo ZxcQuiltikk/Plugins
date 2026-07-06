@@ -107,7 +107,7 @@ Sect.PlayersBlobSection:AddToggle({
 						if CreateGrabLine then CreateGrabLine:FireServer(tRoot, Vector3.zero, tRoot.Position, false) end
 
 						local startTime = tick()
-						while tick() - startTime < 0.5 do
+						while tick() - startTime < 0.7 do
 							if SNO and tRoot.Parent then
 								SNO:FireServer(tRoot, tRoot.CFrame)
 							end
@@ -118,7 +118,7 @@ Sect.PlayersBlobSection:AddToggle({
 						blobRoot.Velocity = Vector3.zero
 
 						startTime = tick()
-						while tick() - startTime < 0.5 do
+						while tick() - startTime < 0.7 do
 							if SNO and tRoot.Parent then
 								SNO:FireServer(tRoot, tRoot.CFrame)
 							end
