@@ -903,7 +903,7 @@ local function ProcessEvent(...)
     if sender and message then
         local senderName = sender.Name
         local cleanMsg = message
-        
+
         if cleanMsg:sub(-7) == " //chat" then
             cleanMsg = cleanMsg:sub(1, -8)
         end
@@ -913,27 +913,18 @@ local function ProcessEvent(...)
             local cmdWord1 = string.lower(Args[1] or "")
             local commandName = cmdWord1:sub(#Prefix + 1)
 
-            if not canUseCommand(senderName, commandName) then
-                goto continue
+            if canUseCommand(senderName, commandName) then
+                local targetName = string.lower(Args[2] or "")
+
+                if string.lower(LocalPlayer.Name) ~= targetName and sender ~= LocalPlayer then
+                    ExecuteCommand(Args, sender)
+                end
             end
-
-            local targetName = string.lower(Args[2] or "")
-
-            if string.lower(LocalPlayer.Name) == targetName then
-                goto continue
-            end
-            
-            if sender == LocalPlayer then
-                goto continue
-            end
-
-            ExecuteCommand(Args, sender)
-
-            ::continue::
         end
     end
 
-    if message and typeof(message) == "string" and (message:find(" //chat") or message:find(" //edit") or message:find(" //react")) then
+    if message and typeof(message) == "string" and 
+       (message:find(" //chat") or message:find(" //edit") or message:find(" //react")) then
         HandleIncomingMessage(message, sender)
     end
 end
