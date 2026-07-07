@@ -519,7 +519,6 @@ local function UpdateReactionBar(label)
         end
     end
 
-    -- Прокручиваем чат вниз после обновления реакций
     task.wait()
     MessagesScroll.CanvasPosition = Vector2.new(0, MessagesScroll.AbsoluteCanvasSize.Y)
 end
