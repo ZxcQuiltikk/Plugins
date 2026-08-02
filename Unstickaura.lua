@@ -82,7 +82,7 @@ local toggle = Sect.AdvancedSection:AddToggle({
 })
 
 toggle:AddDropdown({
-	Name = "Unstick Aura Radius",
+	Name = "Radius",
 	Options = {"14", "16", "18", "20", "31"},
 	Multi = false,
 	Default = "20",
