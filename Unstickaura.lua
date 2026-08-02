@@ -55,7 +55,8 @@ local toggle = Sect.AdvancedSection:AddToggle({
 									"SpookyCandle1",
 									"NinjaKatana",
 									"ToolPencil",
-									"FoodDonut"				
+									"FoodDonut",
+									""
 								}) do
 									local toy = spawned:FindFirstChild(toyName)
 									if toy then
