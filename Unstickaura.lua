@@ -6,7 +6,7 @@ local removeAntiKickAuraConnection = nil
 local useWhitelistRemoveAntiKick = true
 
 local toggle = Sect.AdvancedSection:AddToggle({
-	Name = "Unstick Aura",
+	Name = "Grab antikick aura",
 	Default = false,
 	Flag = "UnstickToggle",
 	Binded = true,
