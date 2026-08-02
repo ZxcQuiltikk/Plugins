@@ -3,8 +3,8 @@
 local Tabs = getgenv().UI.Tabs
 local Sect = getgenv().UI.Sect
 
-Sect.FunLineSection:AddToggle({
-    Name = "Break all Plots",
+Sect.FunLineSection:AddButton({
+    Name = "Break all plots",
     Callback = function(Value)
         if Value then
             getgenv()._breakPlotsActive = true
@@ -71,7 +71,7 @@ Sect.FunLineSection:AddToggle({
                     STRF:InvokeServer("NinjaShuriken", myroot.CFrame * CFrame.new(0, 0, 25), Vector3.new(0, 0, 0))
                     task.wait(0.01)
                 end
-				
+                
                 task.wait(0.01)
                 if connection then
                     connection:Disconnect()
