@@ -38,7 +38,7 @@ local Sect = getgenv().UI.Sect
 
 Sect.CBHKSection = Tabs.VisualTab:AddSection({Name = "Custom Blackhole", Side = "Right"})
     Sect.CBHKSection:AddToggle({
-    Name = "Realistic Black Hole",
+    Name = "Realistic Blackhole",
     Callback = function(Value)
         customBH = Value
         
